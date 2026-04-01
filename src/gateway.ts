@@ -3,7 +3,7 @@ import { ChatEvent, Session, Message, ToolCall, ToolResult, ToolDefinition, Chan
 export class Gateway {
   private aiConfig: AIConfig;
   private sessions = new Map<string, Session>();
-  private channels: ChannelAdapter[] = [];
+  private channels: ChannelAdapter[] = []; // 渠道信息
   private tools: ToolDefinition[] = [];
   private channelsByName = new Map<string, ChannelAdapter>()
 
