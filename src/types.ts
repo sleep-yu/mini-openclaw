@@ -85,5 +85,6 @@ export interface ChannelAdapter {
   name: string
   start(): Promise<void>
   stop(): Promise<void>
-  send(sessionId: string, content: string): Promise<void>
+  send(sessionId: string, content: string): Promise<void>;
+  onMessage(handler: (event: ChatEvent) => void): void
 }
