@@ -1,6 +1,7 @@
 import { Gateway } from "./gateway.js";
 import { WebChatChannel } from "./channels/webchat.js";
 import type { AIConfig } from "./types.js";
+import 'dotenv/config'
 
 async function main() {
   // 配置AI
@@ -10,7 +11,7 @@ async function main() {
     apiKey: process.env.OPENAI_API_KEY || '',
     baseUrl: process.env.OPENCLAW_BASE_URL || '',
   }
-
+  console.log(aiConfig, 'aiConfig')
   // 创建 Gateway
   const gateway = new Gateway(aiConfig);
   const webchat = new WebChatChannel();

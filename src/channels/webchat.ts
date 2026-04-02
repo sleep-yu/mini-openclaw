@@ -1,5 +1,8 @@
 import { WebSocketServer, WebSocket } from "ws";
 import type { ChatEvent, ChannelAdapter } from "../types.js";
+import http from 'http';
+import fs from 'fs';
+import path from 'path';
 
 export class WebChatChannel implements ChannelAdapter {
   name = 'webchat';
@@ -10,7 +13,21 @@ export class WebChatChannel implements ChannelAdapter {
 
   // 启动websocket服务器
   async start(): Promise<void> {
-    this.wss = new WebSocketServer({ port: this.port });
+    // 1. 先创建 HTTP 服务器
+    const server = http.createServer((req, res) => {
+      if (req.url === '/' || req.url === '/index.html') {
+        const html = fs.readFileSync(path.join(process.cwd(), 'public', 'index.html'));
+        res.writeHead(200, { 'Content-Type': 'text/html' });
+        res.end(html);
+      } else {
+        res.writeHead(404);
+        res.end('Not Found');
+      }
+    });
+
+    // 2. WebSocket 附加到 HTTP 服务器（共用的）
+    this.wss = new WebSocketServer({ server });
+
     this.wss.on('connection', (ws) => {
       // 生成唯一id
       const sessionId = crypto.randomUUID();
@@ -49,7 +66,11 @@ export class WebChatChannel implements ChannelAdapter {
       console.error("[WebChat] server error:", err)
     })
 
-    console.log(`[WebChat] WebSocket server running on ws://127.0.0.1:${this.port}`)
+    // 3. 启动 HTTP 服务器
+    server.listen(this.port, () => {
+      console.log(`[WebChat] HTTP server running on http://127.0.0.1:${this.port}`);
+    });
+
   }
 
   async stop(): Promise<void> {
