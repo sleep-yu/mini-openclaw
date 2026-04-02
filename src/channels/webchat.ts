@@ -6,7 +6,7 @@ export class WebChatChannel implements ChannelAdapter {
   private wss: WebSocketServer | null = null;
   private sessions = new Map<string, WebSocket>();
   private eventHandlers: ((event: ChatEvent) => void)[] = [];
-  private port = 18789  // 默认值，可配置
+  private port = 18788  // 默认值，可配置
 
   // 启动websocket服务器
   async start(): Promise<void> {

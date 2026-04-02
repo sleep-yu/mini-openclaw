@@ -22,7 +22,7 @@ async function main() {
   await webchat.start();
 
   console.log("🦞 MiniOpenClaw 启动成功");
-  console.log(`WebChat: http://127.0.0.1:18789`);
+  console.log(`WebChat: http://127.0.0.1:18788`);
 }
 
 main().catch(console.error);

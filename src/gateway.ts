@@ -1,4 +1,5 @@
 import { ChatEvent, Session, Message, ToolCall, ToolResult, ToolDefinition, ChannelAdapter, AIConfig } from "./types.js";
+import OpenAI from "openai";
 
 export class Gateway {
   private aiConfig: AIConfig;
@@ -72,10 +73,25 @@ export class Gateway {
 
   // 调用 Agent Runtime (核心循环)
   private async runAgent(session: Session): Promise<string> {
-    // TODO: phase2 再接入 AI 模型
-    // phase 1 先返回模型回复
-    const lastMsg = session.messages[session.messages.length - 1];
-    return `[模拟回复] 你说了: ${lastMsg.content}`;
+    // 创建 OpenAI 客户端
+    const client = new OpenAI({
+      apiKey: this.aiConfig.apiKey,
+      baseURL: this.aiConfig.baseUrl
+    })
+
+    // 构建消息历史
+    const messages = session.messages.map((msg) => {
+      const { role, content } = msg;
+      return { role, content }
+    })
+    // 调用模型
+    const response = await client.chat.completions.create({
+      model: this.aiConfig.model,
+      messages: messages as any
+    })
+
+    // 返回回复
+    return response.choices[0].message.content || '';
   }
 
   // 执行工具调用
