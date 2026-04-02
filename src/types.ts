@@ -77,7 +77,7 @@ export interface AIConfig {
   provider: AIProvider
   model: string
   apiKey: string
-  baseUrl?: string   // ollama 用
+  baseUrl: string
 }
 
 /** 渠道适配器接口 */
