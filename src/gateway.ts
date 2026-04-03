@@ -42,20 +42,22 @@ export class Gateway {
     }
     session.messages.push(userMsg)
     // 3.调用Agent （带工具循环）
-    const reply = await this.runAgent(session);
+    let fullReply = '';
+    const channel = this.channelsByName.get(event.channel);
+    await this.runAgent(session, async (chunk) => {
+      fullReply += chunk;
+      if (channel) {
+        await channel.send(event.sessionId, chunk); // 立即发送片段
+      }
+    });
     // 4.保存助手回复到会话
     const assistantMsg: Message = {
       id: crypto.randomUUID(),
       role: "assistant",
-      content: reply,
+      content: fullReply,
       createdAt: new Date()
     }
     session.messages.push(assistantMsg)
-    // 5.发送回复给客户端
-    const channel = this.channelsByName.get(event.channel);
-    if (channel) {
-      await channel.send(event.sessionId, reply);
-    }
   }
 
   // 创建会话
@@ -72,11 +74,11 @@ export class Gateway {
   }
 
   // 调用 Agent Runtime (核心循环)
-  private async runAgent(session: Session): Promise<string> {
+  private async runAgent(session: Session, onChunk: (chunk: string) => Promise<void>): Promise<string> {
     // 创建 OpenAI 客户端
     const client = new OpenAI({
       apiKey: this.aiConfig.apiKey,
-      baseURL: this.aiConfig.baseUrl
+      baseURL: this.aiConfig.baseUrl,
     })
 
     // 构建消息历史
@@ -85,13 +87,17 @@ export class Gateway {
       return { role, content }
     })
     // 调用模型
-    const response = await client.chat.completions.create({
+    const stream = await client.chat.completions.create({
       model: this.aiConfig.model,
-      messages: messages as any
+      messages: messages as any,
+      stream: true, // 启动流式
     })
-
-    // 返回回复
-    return response.choices[0].message.content || '';
+    for await (const chunk of stream) {
+      const content = chunk.choices[0]?.delta?.content || '';
+      if (content) {
+        await onChunk(content); // 每收到chunk就回调
+      }
+    }
   }
 
   // 执行工具调用

@@ -1,9 +1,11 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MiniOpenClaw</title>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <style>
     :root {
       --accent: #e07020;
@@ -26,7 +28,11 @@
       --radius-lg: 14px;
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
     body {
       font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -48,8 +54,15 @@
       gap: 0.75rem;
     }
 
-    .logo { font-size: 1.5rem; }
-    .brand { font-weight: 600; color: var(--text-strong); font-size: 0.95rem; }
+    .logo {
+      font-size: 1.5rem;
+    }
+
+    .brand {
+      font-weight: 600;
+      color: var(--text-strong);
+      font-size: 0.95rem;
+    }
 
     .status {
       margin-left: auto;
@@ -65,11 +78,22 @@
       height: 8px;
       border-radius: 50%;
     }
-    .status-dot.connected { background: var(--ok); }
-    .status-dot.disconnected { background: var(--danger); }
+
+    .status-dot.connected {
+      background: var(--ok);
+    }
+
+    .status-dot.disconnected {
+      background: var(--danger);
+    }
 
     /* 消息区域 */
-    .chat { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .chat {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
 
     .messages {
       flex: 1;
@@ -102,7 +126,11 @@
       color: var(--text);
     }
 
-    .message.assistant::before { content: "🦞"; margin-right: 0.5rem; color: var(--accent); }
+    .message.assistant::before {
+      content: "🦞";
+      margin-right: 0.5rem;
+      color: var(--accent);
+    }
 
     /* 输入区 */
     .compose {
@@ -121,7 +149,9 @@
       transition: border-color 0.2s;
     }
 
-    .input-wrapper:focus-within { border-color: var(--accent); }
+    .input-wrapper:focus-within {
+      border-color: var(--accent);
+    }
 
     .input-wrapper input {
       flex: 1;
@@ -133,7 +163,9 @@
       padding: 0.5rem;
     }
 
-    .input-wrapper input::placeholder { color: var(--muted); }
+    .input-wrapper input::placeholder {
+      color: var(--muted);
+    }
 
     .send-btn {
       background: var(--accent);
@@ -146,13 +178,37 @@
       transition: background 0.2s;
     }
 
-    .send-btn:hover:not(:disabled) { background: var(--accent-hover); }
-    .send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .send-btn:hover:not(:disabled) {
+      background: var(--accent-hover);
+    }
+
+    .send-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
 
     /* 加载动画 */
-    .message.typing-indicator { align-self: flex-start; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 0.75rem 1rem; display: inline-flex; align-items: center; gap: 0.5rem; }
-    .message.typing-indicator::before { content: "🦞"; color: var(--accent); }
-    .typing { display: flex; gap: 4px; }
+    .message.typing-indicator {
+      align-self: flex-start;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 0.75rem 1rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .message.typing-indicator::before {
+      content: "🦞";
+      color: var(--accent);
+    }
+
+    .typing {
+      display: flex;
+      gap: 4px;
+    }
+
     .typing span {
       width: 6px;
       height: 6px;
@@ -160,12 +216,26 @@
       border-radius: 50%;
       animation: bounce 1.4s infinite;
     }
-    .typing span:nth-child(2) { animation-delay: 0.2s; }
-    .typing span:nth-child(3) { animation-delay: 0.4s; }
+
+    .typing span:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+
+    .typing span:nth-child(3) {
+      animation-delay: 0.4s;
+    }
 
     @keyframes bounce {
-      0%, 60%, 100% { transform: translateY(0); }
-      30% { transform: translateY(-6px); }
+
+      0%,
+      60%,
+      100% {
+        transform: translateY(0);
+      }
+
+      30% {
+        transform: translateY(-6px);
+      }
     }
 
     /* 空状态 */
@@ -178,9 +248,23 @@
       color: var(--muted);
       gap: 1rem;
     }
-    .empty-state .icon { font-size: 3rem; }
+
+    .empty-state .icon {
+      font-size: 3rem;
+    }
+
+    /* Markdown 样式 */
+    .message.assistant h1 { font-size: 1.25rem; margin: 0.5rem 0; }
+    .message.assistant h2 { font-size: 1.1rem; margin: 0.5rem 0; }
+    .message.assistant h3 { font-size: 1rem; margin: 0.5rem 0; }
+    .message.assistant p { margin: 0.5rem 0; }
+    .message.assistant code { background: var(--bg-elevated); padding: 0.2rem 0.4rem; border-radius: 4px; font-size: 0.9rem; }
+    .message.assistant pre { background: var(--bg-elevated); padding: 0.75rem; border-radius: 8px; overflow-x: auto; margin: 0.5rem 0; }
+    .message.assistant pre code { background: none; padding: 0; }
+    .message.assistant ul, .message.assistant ol { margin: 0.5rem 0; padding-left: 1.5rem; }
   </style>
 </head>
+
 <body>
   <div class="topbar">
     <span class="logo">🦞</span>
@@ -215,6 +299,7 @@
     const sendBtn = document.getElementById('send');
     const statusDot = document.getElementById('statusDot');
     const statusText = document.getElementById('statusText');
+    let currentAssistantMsg = null;
 
     ws.onopen = () => {
       statusDot.className = 'status-dot connected';
@@ -228,12 +313,24 @@
 
     ws.onmessage = (event) => {
       const data = JSON.parse(event.data);
-      addMessage(data.content, 'assistant');
+      // 如果还没有创建当前会话的消息框，则创建
+      if (!currentAssistantMsg) {
+        removeTyping(); // 移除"正在输入"提示
+        currentAssistantMsg = document.createElement('div');
+        currentAssistantMsg.className = 'message assistant';
+        currentAssistantMsg.dataset.content = '';
+        messages.appendChild(currentAssistantMsg);
+      }
+      // 累积内容并渲染 Markdown
+      currentAssistantMsg.dataset.content += data.content;
+      currentAssistantMsg.innerHTML = marked.parse(currentAssistantMsg.dataset.content);
+      messages.scrollTop = messages.scrollHeight;
     };
 
     function sendMessage() {
       const content = input.value.trim();
       if (!content) return;
+      currentAssistantMsg = null;  // 添加这一行
       emptyState.style.display = 'none';
       addMessage(content, 'user');
       ws.send(JSON.stringify({ type: 'message', content }));
@@ -269,4 +366,5 @@
     input.focus();
   </script>
 </body>
+
 </html>
